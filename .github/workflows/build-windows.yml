@@ -44,13 +44,18 @@ jobs:
         run: |
           $url = "https://github.com/microsoft/onnxruntime/releases/download/v1.19.2/onnxruntime-win-x64-1.19.2.zip"
           Invoke-WebRequest -Uri $url -OutFile onnxruntime.zip
-          7z x onnxruntime.zip -o"." -y
-          echo "ORT_LIB_LOCATION=$pwd\onnxruntime-win-x64-1.19.2" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          7z x onnxruntime.zip -o"apps/screenpipe-app-tauri/src-tauri/" -y
+          Get-ChildItem "apps/screenpipe-app-tauri/src-tauri/onnxruntime-win-x64-1.19.2/lib" | ForEach-Object { Write-Host $_.Name }
 
       - name: Build CLI
         env:
           CARGO_PROFILE_RELEASE_STRIP: "none"
           CARGO_PROFILE_RELEASE_PANIC: "abort"
+          CARGO_PROFILE_RELEASE_INCREMENTAL: "false"
+          RUSTFLAGS: "-C link-arg=/LTCG"
+          ORT_STRATEGY: system
+          ORT_LIB_LOCATION: ${{ github.workspace }}/apps/screenpipe-app-tauri/src-tauri/onnxruntime-win-x64-1.19.2
+          AWS_LC_SYS_PREBUILT_NASM: "1"
         run: |
           cargo build --release --target x86_64-pc-windows-msvc
 
@@ -59,7 +64,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path artifacts
           Copy-Item target/x86_64-pc-windows-msvc/release/screenpipe.exe artifacts/
-          Copy-Item onnxruntime-win-x64-1.19.2/lib/*.dll artifacts/ -ErrorAction SilentlyContinue
+          Copy-Item apps/screenpipe-app-tauri/src-tauri/onnxruntime-win-x64-1.19.2/lib/*.dll artifacts/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
