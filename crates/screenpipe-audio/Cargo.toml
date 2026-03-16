@@ -107,7 +107,6 @@ windows = { version = "0.58", features = [
 
 [target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
 ort = { version = "=2.0.0-rc.6", features = [
-  "download-binaries",
   "copy-dylibs",
 ] }
 esaxx-rs = "0.1.10"

@@ -59,6 +59,26 @@ jobs:
         run: |
           cargo build --release --target x86_64-pc-windows-msvc
 
+      - name: Verify ORT version compatibility
+        shell: pwsh
+        run: |
+          Write-Output "Checking onnxruntime.dll version..."
+          $dll = "apps/screenpipe-app-tauri/src-tauri/onnxruntime-win-x64-1.19.2/lib/onnxruntime.dll"
+          if (Test-Path $dll) {
+            $ver = (Get-Item $dll).VersionInfo
+            Write-Output "ORT DLL version: $($ver.FileVersion)"
+          }
+          # Quick smoke: run screenpipe --version (should not crash with API version error)
+          $env:PATH = "apps/screenpipe-app-tauri/src-tauri/onnxruntime-win-x64-1.19.2/lib;" + $env:PATH
+          $proc = Start-Process -FilePath "target/x86_64-pc-windows-msvc/release/screenpipe.exe" -ArgumentList "--version" -NoNewWindow -PassThru -Wait -RedirectStandardOutput version.txt -RedirectStandardError error.txt
+          Get-Content version.txt -ErrorAction SilentlyContinue
+          $errContent = Get-Content error.txt -ErrorAction SilentlyContinue
+          if ($errContent -match "API version") {
+            Write-Error "ORT API version mismatch detected: $errContent"
+            exit 1
+          }
+          Write-Output "ORT version check passed"
+
       - name: Package artifacts
         shell: pwsh
         run: |
