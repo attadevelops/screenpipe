@@ -105,10 +105,12 @@ windows = { version = "0.58", features = [
     "Win32_UI_Shell_PropertiesSystem",
 ] }
 
+# Windows x86_64: link against externally-provided ORT via ORT_LIB_LOCATION.
+# Do NOT use download-binaries or copy-dylibs — those bake in ORT 1.17.1
+# which only supports API [1,17], but ort crate v2.0.0-rc.6 requests API v19.
+# CI downloads ORT 1.19.2 and sets ORT_LIB_LOCATION + ORT_STRATEGY=system.
 [target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
-ort = { version = "=2.0.0-rc.6", features = [
-  "copy-dylibs",
-] }
+ort = { version = "=2.0.0-rc.6" }
 esaxx-rs = "0.1.10"
 samplerate = { version = "0.2.4" }
 libsamplerate-sys = "0.1.10"
